@@ -76,7 +76,7 @@ async function searchGame(event: SubmitEvent) {
 </script>
 
 <template>
-  <form v-on:submit="searchGame">
+  <form v-on:submit.prevent="searchGame">
     <legend>
       <p>Manifest downloaded:  <span class="download-manifest-badge" :class="manifestDownloaded ? 'success' : 'error'">{{ manifestDownloaded ? "Yes" : "No" }} </span> </p>
     </legend>
