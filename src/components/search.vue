@@ -81,7 +81,11 @@ async function searchGame(event: SubmitEvent) {
     <legend>
       <p>Manifest downloaded:  <span class="download-manifest-badge" :class="manifestDownloaded ? 'success' : 'error'">{{ manifestDownloaded ? "Yes" : "No" }} </span> </p>
     </legend>
-    <label for="search">Search</label>
+    <section>
+      <label for="starts-with">Empieza con</label>
+      <input type="checkbox" id="starts-with" name="starts-with" />
+    </section>
+    <label for="search">Buscar juego</label>
     <input type="search" id="search" name="search" />
 
     <button :disabled="!manifestDownloaded" type="submit">GO!</button> 
