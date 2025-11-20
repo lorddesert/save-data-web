@@ -84,8 +84,8 @@ async function searchGame(event: SubmitEvent) {
     <label for="search">Search</label>
     <input type="search" id="search" name="search" />
 
-    <button type="submit">searchGame</button> 
-   <button @click="downloadManifest">Download manifest</button>
+    <button :disabled="!manifestDownloaded" type="submit">GO!</button> 
+   <button :disabled="manifestDownloaded" @click="downloadManifest">Descargar manifiesto</button>
   </form>
   <div>
       <pre>
