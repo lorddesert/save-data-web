@@ -47,10 +47,6 @@ async function downloadManifest() {
   }
 }
 
-/**
- * 
- * @param { string } game
- */
 async function searchGame(event: SubmitEvent) {
   event.preventDefault()
   const formData = event.target as HTMLFormElement
