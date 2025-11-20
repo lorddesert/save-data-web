@@ -57,9 +57,12 @@ async function searchGame(event: SubmitEvent) {
   const data = new FormData(formData)
   const game = data.get("search")
   const manifestData = Object.keys(manifest.value)
+  const startsWith = data.get("starts-with")
 
 
-  const regex = new RegExp(`${game}`, "gmi")
+  const regex = new RegExp(`${startsWith ? '^' : ''}${game}`, "gmi")
+
+  console.log({regex})
 
   let possibleMatches = manifestData.filter(item => {
     return item.match(regex)
