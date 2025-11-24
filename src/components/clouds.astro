@@ -1,0 +1,14 @@
+---
+const clouds = Astro.props.clouds ?? []
+---
+
+<section>
+  <h2>Clouds</h2>
+  <ul>
+    {
+      clouds.map((cloud: string) => {
+        return <li class="badge">{cloud}</li>;
+      })
+    }
+  </ul>
+</section>

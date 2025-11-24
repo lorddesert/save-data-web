@@ -1,0 +1,59 @@
+---
+export const prerender = false;
+
+import type { Game } from "@/utils";
+import DefaultLayout from "../../layouts/default-layout.astro";
+import Clouds from "@/components/clouds.astro";
+const game = Astro.params.game ?? "";
+
+console.log(Astro.params);
+
+if (!game) {
+  console.log(game);
+  return Astro.redirect("/404");
+}
+
+const res = await fetch("http://localhost:4321/get-manifest");
+const manifest = await res.json();
+
+const selectedGame: Game = manifest[game];
+
+if (!selectedGame) {
+  return Astro.redirect("/404");
+}
+
+const clouds = Object.keys(selectedGame.cloud ?? {});
+const files = Object.keys(selectedGame.files ?? {});
+const gameID = selectedGame.id;
+
+const installDir = Object.keys(selectedGame.installDir ?? {})
+---
+
+<DefaultLayout>
+  <h1>{game}</h1>
+  
+  <section>
+    <h2>Files</h2>
+    <ul>
+      {files.map((file) => {
+        return <li class="badge">{file} { }</li>;
+      })}
+  </section>
+  
+  <section>
+    <h4>ID: </h4>
+    <p>{gameID.lutris}</p>
+    <p>{gameID.steamExtra}</p>
+  </section>
+  <section>
+    <h4>Install Dir:</h4>
+    {installDir}
+  </section>
+  <section>
+    <h4>Launch:</h4>
+    <p>{selectedGame.launch}</p>
+  </section>
+
+  { clouds.length && <Clouds clouds={clouds} /> }
+
+</DefaultLayout>

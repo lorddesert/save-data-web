@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+
+  <p id="data"></p>
+
+  <button onclick="getInfo()">Get info</button>
+
+  <script>
+    async function getInfo() {
+      let URL = "https://github.com/lorddesert/sachacloud-manifest/releases/download/brotli-test/manifest.br"
+      let res = await fetch(URL)
+
+      let data = await res.json()
+
+      document.getElementById("data").innerHTML = JSON.stringify(data)
+    }
+  </script>
+</body>
+</html>

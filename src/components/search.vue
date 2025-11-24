@@ -108,7 +108,7 @@ async function searchGame(event: SubmitEvent) {
     <h2>Resultados</h2>
     <ul>
       <li class="game-result" v-for="game in searchResults">
-        <a :href="`/${game.url}`">
+        <a :href="`/game/${game.url}`">
           {{ game.name }}
         </a>
       </li>
