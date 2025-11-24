@@ -1,97 +1,122 @@
 <script setup lang="ts">
+import * as z from "zod";
+import { ref, type Ref } from "vue";
+import { downloadManifest, type SearchResult } from "@/utils";
+import { useStore } from "@nanostores/vue";
+import { $manifest, $manifestDownloaded } from "@/stores/manifest";
 
-type GameObject = {
-  cloud: {
-    steam: boolean
-  },
-  files: {
-    [key: string]: {
-       tags: string,
-       when: {
-        os: string
-       },
-    },
-  }
-}
+// State
+let searchResults: Ref<SearchResult[] | []> = ref([]);
+const manifestDownloaded = useStore($manifestDownloaded)
+const manifest = useStore($manifest)
+let submitError = ref("");
+let hasSubmitted = ref(false);
 
+const searchFormSchema = z.object({
+  search: z.string().min(1, "Minimo 1 caracter."),
+  "starts-with": z.string().optional().nullable(),
+});
 
-import { ref } from 'vue';
-import yaml from 'js-yaml'
-
-let search = ref("")
-let manifest = ref({})
-let allGames = ref([])
-let testOutput = ref([]) 
-
-let manifestDownloaded = ref(false)
-
-let games = ""
-
-
-async function downloadManifest() {
-  const manifestURL = "https://raw.githubusercontent.com/mtkennerly/ludusavi-manifest/master/data/manifest.yaml"
-  try {
-    const res = await fetch(manifestURL)
-    const data = await res.text()
-
-    const gameData = yaml.load(data) as any
-
-    manifest.value = gameData
-
-    games = gameData
-
-    manifestDownloaded.value = true
-  } catch(e) {
-    console.error('Something happened')
-    console.log(e)
-  }
-}
+// Methods
 
 async function searchGame(event: SubmitEvent) {
-  const formData = event.target as HTMLFormElement
-  const data = new FormData(formData)
-  const game = data.get("search")
-  const manifestData = Object.keys(manifest.value)
-  const startsWith = data.get("starts-with")
+  hasSubmitted.value = true;
 
+  if (!manifestDownloaded.value) {
+    console.log("ATENCION: DESCARGANDO MANIFIESTO...");
+    $manifest.set(await downloadManifest())
+  }
 
-  const regex = new RegExp(`${startsWith ? '^' : ''}${game}`, "gmi")
+  const formData = event.target as HTMLFormElement;
+  const data = new FormData(formData);
 
-  console.log({regex})
+  const dataToParse = {
+    search: data.get("search"),
+    "starts-with": data.get("starts-with"),
+  };
 
-  let possibleMatches = manifestData.filter(item => {
-    return item.match(regex)
-  })
-  
-  console.log({game, manifestData, possibleMatches})
+  const result = searchFormSchema.safeParse(dataToParse);
 
-  // const a = Reflect.get(manifestData, "Elden Ring")
+  if (!result.success) {
+    console.error(result.error.message);
+    hasSubmitted.value = false;
+    return;
+  }
 
-  // const b = JSON.parse(JSON.stringify(a))
+  const game = data.get("search");
+  const manifestData = Object.keys(manifest.value);
 
-  testOutput.value = possibleMatches
+  const startsWith = data.get("starts-with");
+
+  const regex = new RegExp(`${startsWith ? "^" : ""}${game}`, "gmi");
+
+  let possibleMatches: SearchResult[] = manifestData
+    .filter((item) => {
+      return item.match(regex);
+    })
+    .map((item) => ({
+      name: item,
+      url: encodeURI(item),
+    }));
+
+  searchResults.value = possibleMatches;
+  hasSubmitted.value = false;
 }
-
 </script>
 
 <template>
   <form v-on:submit.prevent="searchGame">
     <legend>
-      <p>Manifest downloaded:  <span class="download-manifest-badge" :class="manifestDownloaded ? 'success' : 'error'">{{ manifestDownloaded ? "Yes" : "No" }} </span> </p>
+      <div class="test">
+        <p>
+          Manifest downloaded:
+          <span class="download-manifest-badge" :class="manifestDownloaded ? 'success' : 'error'">{{ manifestDownloaded
+            ? "Yes" : "No" }}
+          </span>
+        </p>
+      </div>
     </legend>
     <section>
-      <label for="starts-with">Empieza con</label>
+      <h5>Opciones</h5>
       <input type="checkbox" id="starts-with" name="starts-with" />
+      <label for="starts-with">Empieza con</label>
     </section>
-    <label for="search">Buscar juego</label>
-    <input type="search" id="search" name="search" />
+    <label for="search">Nombre del juego</label>
+    <input type="search" id="search" name="search" placeholder="Dark souls..." />
 
-    <button :disabled="!manifestDownloaded" type="submit">GO!</button> 
-   <button :disabled="manifestDownloaded" @click="downloadManifest">Descargar manifiesto</button>
+    <p v-if="submitError">{{ submitError }}</p>
+      <button :disabled="hasSubmitted" type="submit">
+        {{ hasSubmitted && manifestDownloaded  
+        ? "Buscando..."
+        : hasSubmitted
+          ? "Descargando manifiesto..."
+          : "GO!"
+      }}
+      </button>
+      <!-- <button
+      :disabled="manifestDownloaded"
+      type="button"
+      @click="downloadManifest"
+    >
+      Descargar manifiesto
+    </button> -->
+
+      <!-- <DownloadManifestButton /> -->
   </form>
-  <div>
-      <pre>
-        {{ testOutput }}
+
+  <section v-if="searchResults.length">
+    <h2>Resultados</h2>
+    <ul>
+      <li class="game-result" v-for="game in searchResults">
+        <a :href="`/${game.url}`">
+          {{ game.name }}
+        </a>
+      </li>
+    </ul>
+  </section>
+  <div class="test">
+    <pre>
+        {{ searchResults }}
       </pre>
   </div>
 </template>
@@ -106,10 +131,9 @@ form {
 }
 
 .download-manifest-badge {
-  padding: .5rem 1rem;
+  padding: 0.5rem 1rem;
   background-color: black;
   border-radius: 15px;
-
 }
 
 .success {
@@ -118,5 +142,28 @@ form {
 
 .error {
   color: crimson;
+}
+
+.test {
+  padding: .5rem;
+  border: 1px solid crimson;
+
+  &:before {
+    content: "test";
+    display: block;
+    font-size: 14px;
+    color: crimson;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 1rem;
+    font-weight: bold;
+  }
+}
+
+.button-group {
+  display: grid;
+  place-content: center start;
+  grid-template-columns: auto 1fr;
+  gap: 1rem;
 }
 </style>
