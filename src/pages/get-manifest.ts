@@ -6,7 +6,7 @@ export async function GET() {
 
   return new Response(file, {
     headers: {
-      'Content-Type': 'application/octet-stream',
+      'Content-Type': 'application/json; charset=utf-8',
       'Content-Encoding': 'br',        // <-- critical
       'Cache-Control': 'public, max-age=3600'
     }
