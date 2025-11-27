@@ -24,7 +24,19 @@ async function searchGame(event: SubmitEvent) {
 
   if (!manifestDownloaded.value) {
     console.log("ATENCION: DESCARGANDO MANIFIESTO...");
-    $manifest.set(await downloadManifest())
+    try {
+      const manifest = await downloadManifest()
+      
+      $manifest.set(manifest)
+    } catch(e) {
+      hasSubmitted.value = false
+
+      console.error(e)
+
+      return
+    }
+
+
   }
 
   const formData = event.target as HTMLFormElement;
