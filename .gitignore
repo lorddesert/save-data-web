@@ -25,3 +25,7 @@ pnpm-debug.log*
 
 src/components/manifest.*
 src/components/output.*
+
+
+
+.vercel/
